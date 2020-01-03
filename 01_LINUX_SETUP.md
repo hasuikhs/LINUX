@@ -287,3 +287,17 @@
 - 아까 만들어준 사용자 계정으로 로그인한다.
 - 이제 Ubuntu를 사용할 수 있다.
 
+### 3.5 Ubuntu 한글
+
+```bash
+$ sudo apt-get install fbterm	# Frame Buffer Terminal 설치
+
+$ sudo apt-get install fonts-nanum-coding	# 폰트 설치
+
+$ sudo fbterm	# Frame Buffer Terminal 진입
+
+$ sudo apt-get update
+```
+
+
+
