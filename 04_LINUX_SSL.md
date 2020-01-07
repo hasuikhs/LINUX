@@ -250,8 +250,6 @@ $ sudo /etc/init.d/apache2 restart
   
 ## 2. CentOS
 
-http://egloos.zum.com/guswl47/v/6514311
-
 ### 2.1 OpenSSL 설치 및 인증서 생성
 
 - CentOS 6 이상 버전은 기본적으로 OpenSSL 패키지가 설치되어 있다.
@@ -317,13 +315,116 @@ $ cat server.key | head -3
 $ cat server.crt | head -3
 ```
 
-#### 2.1.6 개인키와 인증서 설치
+## 2.2 Apache에 SSL 적용
+
+#### 2.2.1 개인키와 인증서 설치
 
 - 해당 디렉토리에 위치해야만 SSL 서비스를 제대로 제공해줄 수 있다.
 
+  ```bash
+  $ cp server.crt /etc/pki/tls/certs
+  $ cp server.key /etc/pki/tls/private/server.key
+  $ cp server.csr /etc/pki/tls/private/server.csr
+  ```
+
+#### 2.2.2 SSL 설정을 변경하기 위한 수정
+
+- 수정 경로
+
+  ```bash
+  $ sudo vi /etc/httpd/conf.d/ssl.conf
+  ```
+
+- 수정 사항
+
+  - 수정 사항을 찾으려면 **`ESC`**를 누르고 **`/`** 입력 후 `검색어`를 입력후 **`ENTER`**, 다음 단어는 **`n`**을 눌러 이동
+
+  - 수정 전
+
+    ```
+    SSLCertificateFile /etc/pki/tls/certs/localhost.crt
+    SSLCertificateKeyFile /etc/pki/tls/private/localhost.key
+    ```
+
+  - 수정 후
+
+    ```bash
+    SSLCertificateFile /etc/pki/tls/certs/server.crt
+    SSLCertificateKeyFile /etc/pki/tls/private/server.key
+    ```
+
+  ![image-20200107091500095](04_LINUX_SSL.assets/image-20200107091500095.png)
+
+#### 2.2.3 서비스 적용을 위한 재시작
+
 ```bash
-$ cp server.crt /etc/pki/tls/certs
-$ cp server.key /etc/pki/tls/private/server.key
-$ cp server.csr /etc/pki/tls/private/server.csr
+$ sudo service httpd restart
 ```
 
+#### 2.2.4 443 포트를 열기위해서 VirtualHost 추가
+
+- 수정 경로
+
+  ```bash
+  $ sudo vi /etc/httpd/conf/httpd.conf
+  ```
+
+- 을 열고 파일의 맨 아래에 다음 사항 추가
+
+  ```bash
+  NameVirtualHost *:443
+  <VirtualHost *:443>
+      SSLEngine on
+      SSLCertificateFile /etc/pki/tls/certs/server.crt
+      SSLCertificateKeyFile /etc/pki/tls/private/server.key
+      ServerAdmin	# 2.1.2의 hostname
+      DocumentRoot /var/www/html
+      ServerName	# 2.1.2의 hostname
+      ErrorLog logs/ssl_starkapin_com_error_log
+      CustomLog logs/ssl_starkapin_com_error_log common
+  </VirtualHost>
+  ```
+
+- 서비스 적용을 위한 재시작
+
+  ```bash
+  $ sudo service httpd restart
+  ```
+
+#### 2.2.5 포트 방화벽 설정
+
+- 수정 경로
+
+  ```bash
+  $ sudo vi /etc/sysconfig/iptables
+  ```
+
+- 수정 사항
+
+  ```bash
+  -A INPUT -p tcp -m state --state NEW -m tcp --dport 443 -j ACCEPT
+  ```
+
+- 방화벽 재시작
+
+  ```bash
+  $ sudo service iptables restart
+  ```
+
+#### 2.2.6 SSL 적용 확인
+
+- `https://IP` 접속 시
+
+  ![image-20200107092851554](04_LINUX_SSL.assets/image-20200107092851554.png)
+
+- `고급` - `안전하지 않음` 이동 시
+
+   ![image-20200107092931760](04_LINUX_SSL.assets/image-20200107092931760.png)
+
+- 만약에 위와 같이 접속이 되지 않는다면 **방화벽 문제**이니 방화벽을 내리고 다시 시도하자.
+
+  ```bash
+  $ sudo service iptables stop
+  ```
+
+  
