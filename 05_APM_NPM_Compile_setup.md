@@ -110,7 +110,7 @@ $ make install
   $ vi /etc/init.d/httpd
   ```
 
-  ```
+  ```bash
   #! /bin/sh
   # chkconfig: 2345 90 90
   # description: init file for Apache server daemon
@@ -142,7 +142,7 @@ $ make install
   $ vi /etc/sysconfig/iptables
   ```
 
-  ```
+  ```bash
   -A INPUT -m state --state NEW -m tcp -p tcp --dport 22 -j ACCEPT
   # -A INPUT -m state --state NEW -m tcp -p tcp --dport 80 -j ACCEPT
   # -A INPUT -m state --state NEW -m tcp -p tcp --dport 3306 -j ACCEPT
@@ -221,6 +221,10 @@ $ /usr/local/bin/cmake \
 	-DWITH_PERFSCHEMA_STORAGE_ENGINE=1 \
 	-DMYSQL_UNIX_ADDR=/usr/local/mysql/mysql.sock \
 	-DMYSQL_TCP_PORT=3306
+	
+$ make
+
+$ make install
 ```
 
 ```bash
@@ -273,7 +277,7 @@ $ chmod 755 /etc/init.d/mysqld
   $ vi /etc/init.d/mysqld
   ```
 
-  ```
+  ```bash
   basedir=/usr/local/mysql
   datadir=/usr/local/mysql/data
   ```
@@ -290,7 +294,7 @@ $ cd ~
   $ vi .bash_profile
   ```
 
-  ```
+  ```bash
   PATH=$PATH:$HOME/bin:/usr/local/mysql/bin
   ```
 
@@ -303,7 +307,7 @@ $ service mysqld start
 ##### 1.1.2.11 MySQL root 계정 비밀번호 변경
 
 ```bash
-$ mysqladmin -u root password root123
+$ mysqladmin -u root password root
 ```
 
 ##### 1.1.2.12 리눅스 시작시 MySQL 구동되도록 설정
@@ -316,4 +320,426 @@ $ chkconfig mysqld on
 $ chkconfig --list mysqld
 ```
 
-[https://moguwai.tistory.com/entry/CentOS%EC%97%90%EC%84%9C-APM-Source-%EC%84%A4%EC%B9%982Mysql-%EC%84%A4%EC%B9%98?category=517733](https://moguwai.tistory.com/entry/CentOS에서-APM-Source-설치2Mysql-설치?category=517733)
+#### 1.1.3 PHP 설치
+
+##### 1.1.3.1 설치에 필요한 패키지 
+
+```bash
+$ yum -y install libxml2-devel
+
+$ yum -y install openssl-devel
+
+$ yum -y install libjpeg-devel
+
+$ yum -y install libpng-devel
+```
+
+##### 1.1.3.2 PHP 다운로드 및 설치
+
+```bash
+$ cd /usr/local/src
+
+$ wget https://www.php.net/distributions/php-7.4.3.tar.gz
+
+$ tar xvfz php-7.4.3.tar.gz
+
+$ cd php-7.4.3	# sqlite3 문제 발생 시 해결 후 cd /usr/local/src/php-7.4.3
+
+$ ./configure \
+	--with-apxs2=/usr/local/apache/bin/apxs \
+	--with-mysql=/usr/local/mysql \
+	--with-mysqli=/usr/local/mysql/bin/mysql_config \
+	--with-imap-ssl \
+	--disable-debug \
+	--with-iconv \
+	--with-gd \
+	--with-jpeg-dir \
+	--with-png-dir \
+	--with-libxml-dir \
+	--with-openssl
+	
+$ make
+
+$ make test
+
+$ make install
+
+$ php -version # 버전 확인
+# PHP 7.4.3 나오면 성공
+```
+
+- 오류 발생 시 vi 애디터로 파일 열고 수정
+
+  ```bash
+  $ vi /usr/local/apache/bin/apxs
+  ```
+
+  ```bash
+  # 첫줄을 변경
+  ! /usr/bin/perl -w
+  ```
+
+- sqlite3 버전 오류시 아래 사항 진행 후
+
+  ```bash
+  $ cd /usr/local/src
+  
+  $ wget https://www.sqlite.org/2020/sqlite-autoconf-3310100.tar.gz
+  
+  $ cd sqlite-autoconf-3310100
+  
+  $ ./configure --prefix=/usr/local/src/sqlite
+  
+  $ make && make install
+  ```
+
+  ```bash
+  # 기존 sqlite3와 방금 설치한 sqlite3를 교체
+  $ /usr/local/src/sqlite/bin/sqlite3 --version	# 방금 설치한 sqlite3 버전 확인
+  3.31.1
+  
+  $ /usr/bin/sqlite3 --version	# CentOS6과 함께 제공되는 sqlite3 버전
+  3.6.20
+  
+  $ sqlite3 --version	# sqlite3의 버전이 여전히 이전 버전임으로 업데이트 필요
+  3.6.20
+  
+  # 이전 sqlite3 옮기기
+  $ mv /usr/bin/sqlite3 /usr/bin/sqlite3_old
+  
+  # 방금 설치한 버전 링크
+  $ ln -s /usr/local/src/sqlite/bin/sqlite3 /usr/bin/sqlite3
+  
+  # 시스템의 버전 확인
+  $ sqlite3 --version
+  3.31.1
+  
+  $ export LD_LIBRARY_PATH=/usr/local/sqlite/lib
+  
+  $ echo $PKG_CONFIG_PATH
+  
+  $ export PKG_CONFIG_PATH=/usr/lib/pkgconfig
+  
+  $ export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
+  ```
+
+#### 1.1.4 Apache와 PHP 연동
+
+- vi 애디터 열고 확인 및 추가
+
+  ```bash
+  $ vi /usr/local/apache/conf/httpd.conf
+  ```
+
+  ```bash
+  LoadModule php7_module	modules/libphp7.so	# 확인
+  
+  AddType application/x-compress .Z
+  AddType application/x-gzip .gz .tgz
+  AddType application/x-httpd-php .php .html
+  ```
+
+#### 1.1.5 PHP 설정 및 테스트
+
+- vi 애디터 열고 수정
+
+  ```bash
+  $ vi /usr/local/src/php-7.4.3/php.ini-production
+  ```
+
+  ```bash
+  short_open_tag = On	# php 코드 작성 시 <?php ?> 말고 <? ?> 작성 가능, 하위 호환성을 위함
+  
+  ... 중략
+  
+  opcache.enable=0	# 캐시를 끄게 되어 개발 시 수정내용이 바로바로 반영되어 개발시 편리
+  ```
+
+- 설정 파일을 잘 관리할 수 있도록 /usr/local/lib 디렉토리에 옮김
+
+  ```bash
+  $ cp /usr/local/src/php-7.4.3/php.ini-production /usr/local/lib/php.in
+  ```
+
+- 테스트
+
+  ```bash
+  $ cd /usr/local/apache/htdocs
+  
+  $ vi phpinfo.php
+  ```
+
+  ```php
+  # phpinfo.php
+  <?
+      phpinfo();
+  ?>
+  ```
+
+- 아파치 실행 
+
+  ```bash
+  $ /usr/local/apache/bin/apachectl stop
+  
+  $ /usr/local/apache/bin/apachectl start
+  ```
+
+### 1.2 source를 이용한 NGINX 설치
+
+#### 1.2.1 NGINX 다운로드
+
+```bash
+$ cd /usr/local/src
+
+$ wget https://nginx.org/download/nginx-1.12.0.tar.gz
+
+$ tar xvfz nginx-1.12.0.tar.gz
+
+$ rm nginx-1.12.0.tar.gz
+```
+
+#### 1.2.2 PCRE 다운로드
+
+```bash
+$ cd /usr/local/src/nginx-1.12.0
+
+$ wget http://downloads.sourceforge.net/project/pcre/pcre/8.37/pcre-8.37.tar.gz
+
+$ tar xvfz pcre-8.37.tar.gz
+```
+
+#### 1.2.3 zlib 다운로드
+
+```bash
+$ cd /usr/local/src/nginx-1.12.0
+
+$ wget http://zlib.net/zlib-1.2.11.tar.gz
+
+$ tar xvfz zlib-1.2.11.tar.gz
+```
+
+#### 1.2.4 OpenSSL 다운로드
+
+```bash
+$ cd /home/username/apps/nginx-1.12.0
+
+$ wget http://www.openssl.org/source/openssl-1.0.2f.tar.gz
+
+$ tar xvfz openssl-1.0.2f.tar.gz
+```
+
+#### 1.2.5 NGINX 설치
+
+```bash
+$ ./configure --prefix=/usr/local/src/nginx --with-zlib=./zlib-1.2.11 --with-pcre=./pcre-8.37 --with-openssl=./openssl-1.0.2f --with-http_ssl_module --with-http_stub_status_module
+
+$ make && make install
+
+$ cd /usr/local/src
+
+$ rm -rf nginx-1.12.0
+```
+
+#### 1.2.6 실행권한 설정
+
+```bash
+$ cd /usr/local/src/nginx/sbin
+
+$ sudo chown root nginx
+
+$ sudo chmod +s nginx
+```
+
+#### 1.2.7 실행 및 테스트
+
+```bash
+$ cd /usr/local/src/nginx/sbin
+
+$ ./nginx	# 시작
+
+# 포트 오류시
+$ vi /usr/local/src/nginx/conf/nginx.conf	# listen 80 수정
+
+$ ./nginx -s stop	# 종료
+```
+
+#### 1.2.8 nginx 서비스 등록
+
+- vi 애디터 실행 후 아래 내용 작성
+
+  ```bash
+  $ vi /etc/init.d/nginx
+  ```
+
+  ```bash
+  #!/bin/sh
+  #
+  # nginx - this script starts and stops the nginx daemon
+  #
+  # chkconfig:   - 85 15 
+  # description:  Nginx is an HTTP(S) server, HTTP(S) reverse \
+  #               proxy and IMAP/POP3 proxy server
+  # processname: nginx
+  # config:      /etc/nginx/nginx.conf
+  # config:      /etc/sysconfig/nginx
+  # pidfile:     /var/run/nginx.pid
+  
+  # Source function library.
+  . /etc/rc.d/init.d/functions
+  
+  # Source networking configuration.
+  . /etc/sysconfig/network
+  
+  # Check that networking is up.
+  [ "$NETWORKING" = "no" ] && exit 0
+  
+  nginx="/usr/local/src/nginx/sbin/nginx"
+  prog=$(basename $nginx)
+  
+  NGINX_CONF_FILE="/usr/local/src/nginx/conf/nginx.conf"
+  
+  [ -f /etc/sysconfig/nginx ] && . /etc/sysconfig/nginx
+  
+  lockfile=/var/lock/subsys/nginx
+  
+  make_dirs() {
+     # make required directories
+     user=`nginx -V 2>&1 | grep "configure arguments:" | sed 's/[^*]*--user=\([^ ]*\).*/\1/g' -`
+     options=`$nginx -V 2>&1 | grep 'configure arguments:'`
+     for opt in $options; do
+         if [ `echo $opt | grep '.*-temp-path'` ]; then
+             value=`echo $opt | cut -d "=" -f 2`
+             if [ ! -d "$value" ]; then
+                 # echo "creating" $value
+                 mkdir -p $value && chown -R $user $value
+             fi
+         fi
+     done
+  }
+  
+  start() {
+      [ -x $nginx ] || exit 5
+      [ -f $NGINX_CONF_FILE ] || exit 6
+      make_dirs
+      echo -n $"Starting $prog: "
+      daemon $nginx -c $NGINX_CONF_FILE
+      retval=$?
+      echo
+      [ $retval -eq 0 ] && touch $lockfile
+      return $retval
+  }
+  
+  stop() {
+      echo -n $"Stopping $prog: "
+      killproc $prog -QUIT
+      retval=$?
+      echo
+      [ $retval -eq 0 ] && rm -f $lockfile
+      return $retval
+  }
+  
+  restart() {
+      configtest || return $?
+      stop
+      sleep 1
+      start
+  }
+  
+  reload() {
+      configtest || return $?
+      echo -n $"Reloading $prog: "
+      killproc $nginx -HUP
+      RETVAL=$?
+      echo
+  }
+  
+  force_reload() {
+      restart
+  }
+  
+  configtest() {
+    $nginx -t -c $NGINX_CONF_FILE
+  }
+  
+  rh_status() {
+      status $prog
+  }
+  
+  rh_status_q() {
+      rh_status >/dev/null 2>&1
+  }
+  
+  case "$1" in
+      start)
+          rh_status_q && exit 0
+          $1
+          ;;
+      stop)
+          rh_status_q || exit 0
+          $1
+          ;;
+      restart|configtest)
+          $1
+          ;;
+      reload)
+          rh_status_q || exit 7
+          $1
+          ;;
+      force-reload)
+          force_reload
+          ;;
+      status)
+          rh_status
+          ;;
+      condrestart|try-restart)
+          rh_status_q || exit 0
+              ;;
+      *)
+          echo $"Usage: $0 {start|stop|status|restart|condrestart|try-restart|reload|force-reload|configtest}"
+          exit 2
+  esac
+  ```
+
+- 실행권한 설정
+
+  ```bash
+  $ sudo chmod +x /etc/init.d/nginx
+  
+  $ sudo chkconfig nginx on
+  
+  $ sudo chkconfig --add nginx
+  
+  $ sudo chkconfig --list nginx
+  # 실행 시 다음과 같이 출력되어야 함
+  # nginx 0:off 1:off 2:on 3:on 4:on 5:on 6:off
+  ```
+
+- 서비스가 등록되면 service 사용 가능
+
+  ```bash
+  $ service nginx (start|stop|restart)
+  ```
+
+#### 1.2.9 NGINX와 PHP 연동
+
+- vi 애디터 실행 후 아래 내용 수정
+
+  ```bash
+  $ vi /usr/local/src/nginx/conf/nginx.conf
+  ```
+
+  - php 부분 주석 제거 후 수정
+
+    ```bash
+    location ~ \.php$ {
+    	root			/usr/local/src/nginx/html;
+    	fastcgi_pass	127.0.0.1:9000;
+    	fastcgi_index	index.php;
+    	fastcgi_param SCRIPT_FILENAME	/scripts$fastcgi_script_name;
+    	include			fastcgi_params;
+    }
+    ```
+
+    
+
+  
