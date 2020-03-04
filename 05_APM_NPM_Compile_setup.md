@@ -29,6 +29,8 @@ $ yum install -y make gcc g++ gcc-c++ autoconf automake libtool pkgconfig findut
   
   $ tar xvfz apr-1.5.2.tar.gz
   
+  $ rm -rf apr-1.5.2.tar.gz
+  
   $ cd apr-1.5.2
   
   $ ./configure --prefix=/usr/local/apr
@@ -46,6 +48,8 @@ $ yum install -y make gcc g++ gcc-c++ autoconf automake libtool pkgconfig findut
   $ wget http://archive.apache.org/dist/apr/apr-util-1.5.4.tar.gz
   
   $ tar xvzf apr-util-1.5.4.tar.gz
+  
+  $ rm -rf apr-util-1.5.4.tar.gz
   
   $ cd apr-util-1.5.4
   
@@ -65,6 +69,8 @@ $ yum install -y make gcc g++ gcc-c++ autoconf automake libtool pkgconfig findut
   
   $ tar xvfz pcre-8.37.tar.gz
   
+  $ rm -rf pcre-8.37.tar.gz
+  
   $ cd pcre-8.37
   
   $ ./configure --prefix=/usr/local/pcre
@@ -82,6 +88,8 @@ $ cd /usr/local/src
 $ wget http://archive.apache.org/dist/httpd/httpd-2.4.23.tar.gz
 
 $ tar xvfz httpd-2.4.23.tar.gz
+
+$ rm -rf httpd-2.4.23.tar.gz
 
 $ mv apr-1.5.2 httpd-2.4.23/srclib/apr
 
@@ -157,124 +165,59 @@ $ make install
 
 #### 1.1.2 MySQL 설치
 
-##### 1.1.2.1 기존에 설치된 MySQL과 cmake 삭제
+##### 1.1.2.1 의존성 파일 설치
 
 ```bash
-$ yum remove -y mysql* cmake
+$ yum -y install ncurses-devel zlib curl libtermcap-devel lib-client-devel bzip2-devel cmake bison perl perl-devel
 ```
 
-##### 1.1.2.2 빌드 환경 설정
-
-```bash
-$ yum install -y zlib zlib-devel cpp perl bison freetype freetype-devel freetype-utils ncurses-devel libtermcap-devel bzip2-devel
-```
-
-##### 1.1.2.3 cmake 다운로드 및 설치
-
-```bash
-$ cd /usr/local/src
-
-$ wget https://cmake.org/files/v3.5/cmake-3.5.2.tar.gz
-
-$ tar xvfz cmake-3.5.2.tar.gz
-
-$ cd cmake-3.5.2
-
-$ ./bootstrap
-
-$ make && make install
-```
-
-##### 1.1.2.4 MySQL 그룹 및 게정 만들기
+##### 1.1.2.2 리눅스 계정 생성
 
 ```bash
 $ groupadd mysql
-$ useradd -g mysql mysql
+$ useradd -g mysql -M mysql -u 27
 ```
 
-##### 1.1.2.5 MySQL 다운로드
+##### 1.1.2.3 MySQL 다운로드
 
 ```bash
 $ cd /usr/local/src
 
-$ wget http://dev.mysql.com/get/Downloads/MySQL-5.6/mysql-5.6.30.tar.gz
+$ wget https://dev.mysql.com/get/Downloads/MySQL-5.5/mysql-5.5.59.tar.gz
 
-$ tar xvfz mysql-5.6.30.tar.gz
+$ tar xvfz mysql-5.5.59.tar.gz
 
-$ cd mysql-5.6.30
+$ rm -rf mysql-5.5.59.tar.gz
+
+$ cd cd mysql-5.5.59
 ```
 
-##### 1.1.2.6 MySQL cmake 컴파일
+##### 1.1.2.4 MySQL cmake 컴파일
 
 ```bash
-$ /usr/local/bin/cmake \
-	-DCMAKE_INSTALL_PREFIX=/usr/local/mysql \
-	-DDEFAULT_CHARSET=utf8 \
-	-DDEFAULT_COLLATION=utf8_general_ci \
-	-DWITH_EXTRA_CHARSETS=all \
-	-DENABLED_LOCAL_INFILE=1 \
-	-DMYSQL_DATADIR=/usr/local/mysql/data \
-	-DMYSQL_USER=mysql \
-	-DWITH_INNOBASE_STORAGE_ENGINE=1 \
-	-DWITH_ARCHIVE_STORAGE_ENGINE=1 \
-	-DWITH_BLACKHOLE_STORAGE_ENGINE=1 \
-	-DWITH_PERFSCHEMA_STORAGE_ENGINE=1 \
-	-DMYSQL_UNIX_ADDR=/usr/local/mysql/mysql.sock \
-	-DMYSQL_TCP_PORT=3306
+$ cmake -DCMAKE_INSTALL_PREFIX=/usr/local/mysql -DMYSQL_DATADIR=/usr/local/mysql/data
 	
-$ make
-
-$ make install
+$ make && make install
 ```
 
+##### 1.1.2.5 환경설정 기본 파일 복사 및 수정
+
 ```bash
-	-DCMAKE_INSTALL_PREFIX=/usr/local/mysql \		# mysql 설치할 디렉토리
-	-DDEFAULT_CHARSET=utf8 \						# mysql 서버의 문자셋
-	-DDEFAULT_COLLATION=utf8_general_ci \			# db의 문자셋
-	-DWITH_EXTRA_CHARSETS=all \						# 추가로 지원할 문자셋
-	-DENABLED_LOCAL_INFILE=1 \						# local_infile 변수 사용 가능 여부
-	-DMYSQL_DATADIR=/usr/local/mysql/data \			# db설치할 디렉토리
-	-DMYSQL_USER=mysql \							# mysql 유저를 지정
-	-DWITH_INNOBASE_STORAGE_ENGINE=1 \				# 스토리지 엔진, default innodb
-	-DWITH_ARCHIVE_STORAGE_ENGINE=1 \				# 스토리지 엔진
-	-DWITH_BLACKHOLE_STORAGE_ENGINE=1 \				# 스토리지 엔진
-	-DWITH_PERFSCHEMA_STORAGE_ENGINE=1 \			# 스토리지 엔진
-	-DMYSQL_UNIX_ADDR=/usr/local/mysql/mysql.sock \	# mysql 소켓 디렉토리
-	-DMYSQL_TCP_PORT=3306							# mysql 포트번호, default가 3306
+$ cd /usr/local/mysql/support-files
+
+$ cp my-huge.cnf /etc/my.cnf
 ```
 
-##### 1.1.2.7 MySQL 그룹/게정 권한 주기
+##### 1.1.2.6 서비스 스크립트 및 서비스 등록
 
 ```bash
-$ chown -R (계정명):(그룹명) /usr/local/mysql
-
-$ chown -R mysql:mysql /usr/local/mysql
-
-$ chown -R mysql:mysql /usr/local/mysql/data
-```
-
-##### 1.1.2.8 DB 생성
-
-```bash
-$ cd /usr/local/mysql
-
-$ ./scripts/mysql_install_db --user=mysql --datadir=/usr/local/mysql/data
-```
-
-##### 1.1.2.9 MySQL 설정파일 복사 및 데몬 복사
-
-```bash
-$ cp support-files/my-default.cnf /etc/my.cnf
-
-$ cp support-files/mysql.server /etc/init.d/mysqld
-
-$ chmod 755 /etc/init.d/mysqld
+$ cp mysql.server /etc/rc.d/init.d/mysqld
 ```
 
 - vi 애디터로 파일 열고 내용 추가
 
   ```bash
-  $ vi /etc/init.d/mysqld
+  $ vi /etc/rc.d/init.d/mysqld
   ```
 
   ```bash
@@ -282,35 +225,65 @@ $ chmod 755 /etc/init.d/mysqld
   datadir=/usr/local/mysql/data
   ```
 
-##### 1.1.2.10 환경변수 등록 및 MySQL 데몬 실행
+##### 1.1.2.7 MySQL 그룹/계정 권한 주기
 
 ```bash
-$ cd ~
+$ chown -R mysql:mysql /usr/local/mysql
+
+$ chown -R mysql:mysql /usr/local/mysql/data
+
+$ chmod 755 /etc/rc.d/init.d/mysqld
 ```
 
-- vi 애디터로 파일을 열고 내용 추가
-
-  ```bash
-  $ vi .bash_profile
-  ```
-
-  ```bash
-  PATH=$PATH:$HOME/bin:/usr/local/mysql/bin
-  ```
+##### 1.1.2.8 MySQL 구동 시작
 
 ```bash
-$ source .bash_profile
-
 $ service mysqld start
+
+$ service mysqld stop
 ```
 
-##### 1.1.2.11 MySQL root 계정 비밀번호 변경
+##### 1.1.2.9 부팅 시 자동 실행하기 설정
+
+```bash
+$ chkconfig --add mysqld
+```
+
+##### 1.1.2.10 주요 기능 PATH 등록
+
+```bash
+$ ln -s /usr/local/mysql/bin/mysql /usr/bin/mysql
+
+$ ln -s /usr/local/mysql/bin/mysqldump /usr/sbin/mysqldump
+
+$ ln -s /usr/local/mysql/bin/mysql_config /usr/sbin/mysql_config
+
+$ ln -s /usr/local/mysql/bin/mysqladmin /usr/sbin/mysqladmin
+
+$ ln -s /usr/local/mysql/support-files/mysql.server /etc/rc.d/init.d/mysql
+```
+
+- vi 애디터로 환경 변수 설정
+
+  ```bash
+  $ vi /root/.bash_profile
+  ```
+
+  ```
+  PATH=$PATH$HOME/bin:/usr/local/mysql/bin:
+  ```
+
+  ```bash
+  $ source /root/.bash_profile
+  ```
+
+##### 1.1.2.9 MySQL root 계정 비밀번호 변경
 
 ```bash
 $ mysqladmin -u root password root
 ```
 
-##### 1.1.2.12 리눅스 시작시 MySQL 구동되도록 설정
+##### 1.1.2.10 리눅스 시작시 MySQL 구동되도록 설정
 
 ```bash
 $ chkconfig --add mysqld
@@ -356,7 +329,10 @@ $ ./configure \
 	--with-jpeg-dir \
 	--with-png-dir \
 	--with-libxml-dir \
-	--with-openssl
+	--with-openssl \
+	--enable-fpm \
+	--with-fpm-user=nobody \
+	--with-fpm-group=nobody
 	
 $ make
 
@@ -386,13 +362,17 @@ $ php -version # 버전 확인
   
   $ wget https://www.sqlite.org/2020/sqlite-autoconf-3310100.tar.gz
   
+  $ tar xvfz sqlite-autoconf-3310100.tar.gz
+  
   $ cd sqlite-autoconf-3310100
   
   $ ./configure --prefix=/usr/local/src/sqlite
   
-  $ make && make install
   ```
 
+$ make && make install
+  ```
+  
   ```bash
   # 기존 sqlite3와 방금 설치한 sqlite3를 교체
   $ /usr/local/src/sqlite/bin/sqlite3 --version	# 방금 설치한 sqlite3 버전 확인
@@ -414,13 +394,13 @@ $ php -version # 버전 확인
   $ sqlite3 --version
   3.31.1
   
-  $ export LD_LIBRARY_PATH=/usr/local/sqlite/lib
+  $ export LD_LIBRARY_PATH=/usr/local/src/sqlite/lib
   
   $ echo $PKG_CONFIG_PATH
   
-  $ export PKG_CONFIG_PATH=/usr/lib/pkgconfig
+  $ export PKG_CONFIG_PATH=/usr/lib64/pkgconfig
   
-  $ export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
+  $ export PKG_CONFIG_PATH=/usr/local/src/sqlite/lib/pkgconfig
   ```
 
 #### 1.1.4 Apache와 PHP 연동
@@ -521,7 +501,7 @@ $ tar xvfz zlib-1.2.11.tar.gz
 #### 1.2.4 OpenSSL 다운로드
 
 ```bash
-$ cd /home/username/apps/nginx-1.12.0
+$ cd /usr/local/src/nginx-1.12.0
 
 $ wget http://www.openssl.org/source/openssl-1.0.2f.tar.gz
 
@@ -735,11 +715,23 @@ $ ./nginx -s stop	# 종료
     	root			/usr/local/src/nginx/html;
     	fastcgi_pass	127.0.0.1:9000;
     	fastcgi_index	index.php;
-    	fastcgi_param SCRIPT_FILENAME	/scripts$fastcgi_script_name;
+    	fastcgi_param SCRIPT_FILENAME	/usr/local/src/nginx/html$fastcgi_script_name;
     	include			fastcgi_params;
     }
     ```
 
-    
+- index.php 작성
+
+  ```bash
+  $ vi /usr/local/src/nginx/html/index.php
+  ```
+
+  ```php
+  <?php
+      phpinfo();
+  ?>
+  ```
 
   
+
+
