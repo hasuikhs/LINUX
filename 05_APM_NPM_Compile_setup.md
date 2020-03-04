@@ -319,6 +319,8 @@ $ tar xvfz php-7.4.3.tar.gz
 $ cd php-7.4.3	# sqlite3 문제 발생 시 해결 후 cd /usr/local/src/php-7.4.3
 
 $ ./configure \
+	--prefix=/usr/local/php \
+	--with-config-file-path=/usr/local/php/etc \
 	--with-apxs2=/usr/local/apache/bin/apxs \
 	--with-mysql=/usr/local/mysql \
 	--with-mysqli=/usr/local/mysql/bin/mysql_config \
@@ -368,9 +370,7 @@ $ php -version # 버전 확인
   
   $ ./configure --prefix=/usr/local/src/sqlite
   
-  ```
-
-$ make && make install
+  $ make && make install
   ```
   
   ```bash
@@ -380,26 +380,26 @@ $ make && make install
   
   $ /usr/bin/sqlite3 --version	# CentOS6과 함께 제공되는 sqlite3 버전
   3.6.20
-  
+   
   $ sqlite3 --version	# sqlite3의 버전이 여전히 이전 버전임으로 업데이트 필요
   3.6.20
-  
+    
   # 이전 sqlite3 옮기기
   $ mv /usr/bin/sqlite3 /usr/bin/sqlite3_old
-  
+    
   # 방금 설치한 버전 링크
   $ ln -s /usr/local/src/sqlite/bin/sqlite3 /usr/bin/sqlite3
-  
+    
   # 시스템의 버전 확인
   $ sqlite3 --version
   3.31.1
-  
+    
   $ export LD_LIBRARY_PATH=/usr/local/src/sqlite/lib
   
   $ echo $PKG_CONFIG_PATH
-  
+    
   $ export PKG_CONFIG_PATH=/usr/lib64/pkgconfig
-  
+    
   $ export PKG_CONFIG_PATH=/usr/local/src/sqlite/lib/pkgconfig
   ```
 
