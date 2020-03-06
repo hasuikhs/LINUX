@@ -15,7 +15,7 @@ $ yum remove -y httpd httpd-*
 ##### 1.1.1.2 빌드 환경 설정
 
 ```bash
-$ yum install -y make gcc g++ gcc-c++ autoconf automake libtool pkgconfig findutils oepnssl openssl-devel openldap-devel pcre-devel libxml2-devel lua-devel curl curl-devel libcurl-devel flex
+$ yum -y install gcc gcc-c++ autoconf libjpeg libjpeg-devel libpng libpng-devel freetype freetype-devel libxml2 libxml2-devel zlib zlib-devel glibc glibc-devel glib2 glib2-devel bzip2 bzip2-devel  ncurses ncurses-devel curl curl-devel e2fsprogs e2fsprogs-devel krb5 krb5-devel libidn libidn-devel openssl openssl-devel libtool  libtool-libs openldap openldap-devel nss_ldap openldap-clients openldap-servers libtool-ltdl libtool-ltdl-devel bison expat-devel
 ```
 
 ##### 1.1.1.3 관련 모듈 다운로드 및 설치
@@ -168,7 +168,7 @@ $ make install
 ##### 1.1.2.1 의존성 파일 설치
 
 ```bash
-$ yum -y install ncurses-devel zlib curl libtermcap-devel lib-client-devel bzip2-devel cmake bison perl perl-devel
+$ yum -y install cmake ncurses-devel zlib curl libtermcap-devel lib-client-devel bzip2-devel cmake bison perl perl-devel
 ```
 
 ##### 1.1.2.2 리눅스 계정 생성
@@ -330,19 +330,12 @@ $ ./configure \
 	--prefix=/usr/local/php \
 	--with-config-file-path=/usr/local/php/etc \
 	--with-apxs2=/usr/local/apache/bin/apxs \
-	--with-mysql=/usr/local/mysql \
 	--with-mysqli=/usr/local/mysql/bin/mysql_config \
 	--with-imap-ssl \
 	--disable-debug \
 	--with-iconv \
-	--with-gd \
-	--with-jpeg-dir \
-	--with-png-dir \
-	--with-libxml-dir \
 	--with-openssl \
-	--enable-fpm \
-	--with-fpm-user=nobody \
-	--with-fpm-group=nobody
+	--enable-fpm
 	
 $ make
 
