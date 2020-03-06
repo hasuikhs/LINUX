@@ -175,7 +175,7 @@ $ yum -y install ncurses-devel zlib curl libtermcap-devel lib-client-devel bzip2
 
 ```bash
 $ groupadd mysql
-$ useradd -g mysql -M mysql -u 27
+$ useradd -g mysql mysql
 ```
 
 ##### 1.1.2.3 MySQL 다운로드
@@ -189,7 +189,7 @@ $ tar xvfz mysql-5.5.59.tar.gz
 
 $ rm -rf mysql-5.5.59.tar.gz
 
-$ cd cd mysql-5.5.59
+$ cd mysql-5.5.59
 ```
 
 ##### 1.1.2.4 MySQL cmake 컴파일
@@ -225,7 +225,15 @@ $ cp mysql.server /etc/rc.d/init.d/mysqld
   datadir=/usr/local/mysql/data
   ```
 
-##### 1.1.2.7 MySQL 그룹/계정 권한 주기
+##### 1.1.2.7 MySQL 초기화
+
+```bash
+$ cd /usr/local/mysql
+
+$ ./scripts/mysql_install_db --user=mysql --basedir=/usr/local/mysql --datadir=/usr/local/mysql/data
+```
+
+##### 1.1.2.8 MySQL 그룹/계정 권한 주기
 
 ```bash
 $ chown -R mysql:mysql /usr/local/mysql
@@ -235,7 +243,7 @@ $ chown -R mysql:mysql /usr/local/mysql/data
 $ chmod 755 /etc/rc.d/init.d/mysqld
 ```
 
-##### 1.1.2.8 MySQL 구동 시작
+##### 1.1.2.9 MySQL 구동 시작
 
 ```bash
 $ service mysqld start
@@ -243,13 +251,13 @@ $ service mysqld start
 $ service mysqld stop
 ```
 
-##### 1.1.2.9 부팅 시 자동 실행하기 설정
+##### 1.1.2.10 부팅 시 자동 실행하기 설정
 
 ```bash
 $ chkconfig --add mysqld
 ```
 
-##### 1.1.2.10 주요 기능 PATH 등록
+##### 1.1.2.11 주요 기능 PATH 등록
 
 ```bash
 $ ln -s /usr/local/mysql/bin/mysql /usr/bin/mysql
@@ -277,13 +285,13 @@ $ ln -s /usr/local/mysql/support-files/mysql.server /etc/rc.d/init.d/mysql
   $ source /root/.bash_profile
   ```
 
-##### 1.1.2.9 MySQL root 계정 비밀번호 변경
+##### 1.1.2.12 MySQL root 계정 비밀번호 변경
 
 ```bash
 $ mysqladmin -u root password root
 ```
 
-##### 1.1.2.10 리눅스 시작시 MySQL 구동되도록 설정
+##### 1.1.2.13 리눅스 시작시 MySQL 구동되도록 설정
 
 ```bash
 $ chkconfig --add mysqld
