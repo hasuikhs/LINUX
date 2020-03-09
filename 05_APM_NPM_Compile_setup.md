@@ -168,8 +168,26 @@ $ make install
 ##### 1.1.2.1 의존성 파일 설치
 
 ```bash
-$ yum -y install cmake ncurses-devel zlib curl libtermcap-devel lib-client-devel bzip2-devel cmake bison perl perl-devel
+$ yum -y install ncurses-devel zlib curl libtermcap-devel lib-client-devel bzip2-devel cmake bison perl perl-devel
 ```
+
+- cmake 다운로드 및 설치
+
+  ```bash
+  $ cd /usr/local/src
+  
+  $ wget https://cmake.org/files/v3.5/cmake-3.5.2.tar.gz
+  
+  $ tar xvfz cmake-3.5.2.tar.gz
+  
+  $ rm -rf cmake-3.5.2.tar.gz
+  
+  $ cd cmake-3.5.2
+  
+  $ ./bootstrap
+  
+  $ make && make install
+  ```
 
 ##### 1.1.2.2 리눅스 계정 생성
 
@@ -183,21 +201,34 @@ $ useradd -g mysql mysql
 ```bash
 $ cd /usr/local/src
 
-$ wget https://dev.mysql.com/get/Downloads/MySQL-5.5/mysql-5.5.59.tar.gz
+$ wget https://dev.mysql.com/get/Downloads/MySQL-5.5/mysql-5.5.14.tar.gz
 
-$ tar xvfz mysql-5.5.59.tar.gz
+$ tar xvfz mysql-5.5.14.tar.gz
 
-$ rm -rf mysql-5.5.59.tar.gz
+$ rm -rf mysql-5.5.14.tar.gz
 
-$ cd mysql-5.5.59
+$ cd mysql-5.5.14
 ```
 
 ##### 1.1.2.4 MySQL cmake 컴파일
 
 ```bash
-$ cmake -DCMAKE_INSTALL_PREFIX=/usr/local/mysql -DMYSQL_DATADIR=/usr/local/mysql/data
+$ cmake \
+	-DCMAKE_INSTALL_PREFIX=/usr/local/mysql \
+	-DMYSQL_DATADIR=/usr/local/mysql/data \
+	-DMYSQL_UNIX_ADDR=/tmp/mysql.sock \
+	-DSYSCONFDIR=/etc \
+	-DDEFAULT_CHARSET=utf8 \
+	-DMYSQL_TCP_PORT=3306 \
+	-DWITH_EXTRA_CHARSETS=all \
+	-DDFAULT_COLLATION=utf8_general_ci \
+	-DDOWNLOAD_BOOST=1 \
+	-DWITH_BOOST=/usr/include/boost \
+	-DWITH_INNOBASE_STORAGE_ENGINE=1 \
+	-DWITH_PERFSCHEMA_STORAGE_ENGINE=1 \
+	-DENABLED_LOCAL_INFILE=1
 	
-$ make && make install
+$ make -j 2 && make install
 ```
 
 ##### 1.1.2.5 환경설정 기본 파일 복사 및 수정
@@ -207,6 +238,19 @@ $ cd /usr/local/mysql/support-files
 
 $ cp my-huge.cnf /etc/my.cnf
 ```
+
+- vi 애디터로 파일 열고 [mysqld] 부분에 추가
+
+  ```bash
+  $ vi /etc/my.cnf
+  ```
+
+  ```
+  [mysqld]
+  character-set-server = utf8
+  collation-server = utf8_general_ci
+  character-set-client-handshake = false
+  ```
 
 ##### 1.1.2.6 서비스 스크립트 및 서비스 등록
 
@@ -230,7 +274,7 @@ $ cp mysql.server /etc/rc.d/init.d/mysqld
 ```bash
 $ cd /usr/local/mysql
 
-$ ./scripts/mysql_install_db --user=mysql --basedir=/usr/local/mysql --datadir=/usr/local/mysql/data
+$ ./scripts/mysql_install_db --user=mysql --basedir=/usr/local/mysql --datadir=/usr/local/mysql/data --defaults-file=/etc/my.cnf
 ```
 
 ##### 1.1.2.8 MySQL 그룹/계정 권한 주기
@@ -288,6 +332,8 @@ $ ln -s /usr/local/mysql/support-files/mysql.server /etc/rc.d/init.d/mysql
 ##### 1.1.2.12 MySQL root 계정 비밀번호 변경
 
 ```bash
+$ service mysqld start
+
 $ mysqladmin -u root password root
 ```
 
@@ -313,52 +359,11 @@ $ yum -y install openssl-devel
 $ yum -y install libjpeg-devel
 
 $ yum -y install libpng-devel
+
+$ yum install gmp-devel
 ```
 
-##### 1.1.3.2 PHP 다운로드 및 설치
-
-```bash
-$ cd /usr/local/src
-
-$ wget https://www.php.net/distributions/php-7.4.3.tar.gz
-
-$ tar xvfz php-7.4.3.tar.gz
-
-$ cd php-7.4.3	# sqlite3 문제 발생 시 해결 후 cd /usr/local/src/php-7.4.3
-
-$ ./configure \
-	--prefix=/usr/local/php \
-	--with-config-file-path=/usr/local/php/etc \
-	--with-apxs2=/usr/local/apache/bin/apxs \
-	--with-mysqli=/usr/local/mysql/bin/mysql_config \
-	--with-imap-ssl \
-	--disable-debug \
-	--with-iconv \
-	--with-openssl \
-	--enable-fpm
-	
-$ make
-
-$ make test
-
-$ make install
-
-$ php -version # 버전 확인
-# PHP 7.4.3 나오면 성공
-```
-
-- 오류 발생 시 vi 애디터로 파일 열고 수정
-
-  ```bash
-  $ vi /usr/local/apache/bin/apxs
-  ```
-
-  ```bash
-  # 첫줄을 변경
-  ! /usr/bin/perl -w
-  ```
-
-- sqlite3 버전 오류시 아래 사항 진행 후
+- sqlite3 최신버전 교체
 
   ```bash
   $ cd /usr/local/src
@@ -373,7 +378,7 @@ $ php -version # 버전 확인
   
   $ make && make install
   ```
-  
+
   ```bash
   # 기존 sqlite3와 방금 설치한 sqlite3를 교체
   $ /usr/local/src/sqlite/bin/sqlite3 --version	# 방금 설치한 sqlite3 버전 확인
@@ -403,6 +408,53 @@ $ php -version # 버전 확인
     
   $ export PKG_CONFIG_PATH=/usr/local/src/sqlite/lib/pkgconfig
   ```
+
+##### 1.1.3.2 PHP 다운로드 및 설치
+
+```bash
+$ cd /usr/local/src
+
+$ wget https://www.php.net/distributions/php-7.4.3.tar.gz
+
+$ tar xvfz php-7.4.3.tar.gz
+
+$ cd php-7.4.3	# sqlite3 문제 발생 시 해결 후 cd /usr/local/src/php-7.4.3
+
+$ ./configure \
+	--prefix=/usr/local/php \
+	--with-config-file-path=/usr/local/php/etc \
+	--with-apxs2=/usr/local/apache/bin/apxs \
+	--with-mysqli=/usr/local/mysql/bin/mysql_config \
+	--with-pdo-mysql=/usr/local/mysql \
+	--with-zlib-dir=/usr/local \
+	--with-openssl \
+	--with-imap-ssl \
+	--disable-debug \
+	--with-iconv \
+	--with-openssl \
+	--enable-fpm
+	
+$ make
+
+$ make test
+
+$ make install
+
+$ php -version # 버전 확인
+# PHP 7.4.3 나오면 성공
+```
+
+- 오류 발생 시 vi 애디터로 파일 열고 수정
+
+  ```bash
+  $ vi /usr/local/apache/bin/apxs
+  ```
+
+  ```bash
+  # 첫줄을 변경
+  ! /usr/bin/perl -w
+  ```
+
 
 #### 1.1.4 Apache와 PHP 연동
 
@@ -543,6 +595,16 @@ $ vi /usr/local/src/nginx/conf/nginx.conf	# listen 80 수정
 
 $ ./nginx -s stop	# 종료
 ```
+
+- 방화벽 설정
+
+  ```bash
+  $ vi /etc/sysconfig/iptables
+  ```
+
+  ```
+  # -A INPUT -m state --state NEW -m tcp -p tcp --dport 9090 -j ACCEPT
+  ```
 
 #### 1.2.8 nginx 서비스 등록
 
@@ -703,6 +765,26 @@ $ ./nginx -s stop	# 종료
 
 #### 1.2.9 NGINX와 PHP 연동
 
+- php-fpm
+
+  ```bash
+  $ cp /usr/local/src/php-7.4.3/php.ini-production /usr/local/lib/php.ini
+  
+  $ cp /usr/local/php/etc/php-fpm.conf.default /usr/local/php/etc/php-fpm.conf
+  
+  $ cp /usr/local/php/etc/php-fpm.d/www.conf.default /usr/local/php/etc/php-fpm.d/www.conf
+  ```
+
+- chkconfig 설정
+
+  ```bash
+  $ cp /usr/local/src/php-7.4.3/sapi/fpm/init.d.php-fpm /etc/init.d/php-frpm
+  
+  $ chmod 700 /etc/init.d/php-fpm
+  
+  $ chkconfig php-fpm on
+  ```
+
 - vi 애디터 실행 후 아래 내용 수정
 
   ```bash
@@ -712,11 +794,17 @@ $ ./nginx -s stop	# 종료
   - php 부분 주석 제거 후 수정
 
     ```bash
+    location / {
+    	root html;
+    	index.html index.htm index.php;
+    }
+    
     location ~ \.php$ {
     	root			/usr/local/src/nginx/html;
     	fastcgi_pass	127.0.0.1:9000;
     	fastcgi_index	index.php;
     	fastcgi_param SCRIPT_FILENAME	/usr/local/src/nginx/html$fastcgi_script_name;
+    	# /scripts
     	include			fastcgi_params;
     }
     ```
@@ -731,6 +819,14 @@ $ ./nginx -s stop	# 종료
   <?php
       phpinfo();
   ?>
+  ```
+
+- 재시작
+
+  ```bash
+  $ service nginx restart
+  
+  $ /etc/init.d/php-fpm start
   ```
 
   
