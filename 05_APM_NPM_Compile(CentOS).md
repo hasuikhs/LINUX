@@ -1,24 +1,20 @@
-# 01 APM/NPM 설치
+# 05_APM/NPM_Compile(CentOS6) 설치
 
-## 1. CentOS
+## 1. Apache 설치
 
-### 1.1 source를 이용한 APM 설치
-
-#### 1.1.1 Apache 설치
-
-##### 1.1.1.1 기존에 설치된 Apache 웹서버 제거
+### 1.1 기존에 설치된 Apache 웹서버 제거
 
 ```bash
 $ yum remove -y httpd httpd-*
 ```
 
-##### 1.1.1.2 빌드 환경 설정
+### 1.2 빌드 환경 설정
 
 ```bash
 $ yum -y install gcc gcc-c++ autoconf libjpeg libjpeg-devel libpng libpng-devel freetype freetype-devel libxml2 libxml2-devel zlib zlib-devel glibc glibc-devel glib2 glib2-devel bzip2 bzip2-devel  ncurses ncurses-devel curl curl-devel e2fsprogs e2fsprogs-devel krb5 krb5-devel libidn libidn-devel openssl openssl-devel libtool  libtool-libs openldap openldap-devel nss_ldap openldap-clients openldap-servers libtool-ltdl libtool-ltdl-devel bison expat-devel
 ```
 
-##### 1.1.1.3 관련 모듈 다운로드 및 설치
+### 1.3 관련 모듈 다운로드 및 설치
 
 - apr 다운로드
 
@@ -80,7 +76,7 @@ $ yum -y install gcc gcc-c++ autoconf libjpeg libjpeg-devel libpng libpng-devel 
   $ make install
   ```
 
-##### 1.1.1.4 Apache 웹서버 다운로드 및 설치
+### 1.4 Apache 웹서버 다운로드 및 설치
 
 ```bash
 $ cd /usr/local/src
@@ -97,14 +93,26 @@ $ mv apr-util-1.5.4 httpd-2.4.23/srclib/apr-util
 
 $ cd httpd-2.4.23
 
-$ ./configure --enable-module=so --enable-mods-shared=most --enable-maintainer-mode --enable-deflate --enable-headers --enable-rewrite --enable-ssl --enable-proxy --enable-proxy-http --enable-proxy-ajp --enable-proxy-balance --with-pcre=/usr/local/pcre --prefix=/usr/local/apache
+$ ./configure --prefix=/usr/local/apache \
+	--enable-module=so \
+	--enable-mods-shared=most \
+	--enable-maintainer-mode \
+	--enable-deflate \
+	--enable-headers \
+	--enable-rewrite \
+	--enable-ssl \
+	--enable-proxy \
+	--enable-proxy-http \
+	--enable-proxy-ajp \
+	--enable-proxy-balance \
+	--with-pcre=/usr/local/pcre
 
 $ make
 
 $ make install
 ```
 
-##### 1.1.1.5 Apache 웹서버 서비스 등록 및 실행
+### 1.5 Apache 웹서버 서비스 등록 및 실행
 
 - httpd 서비스 파일 만들기
 
@@ -142,7 +150,7 @@ $ make install
   $ service httpd start
   ```
 
-##### 1.1.1.6 방화벽 설정
+### 1.6 방화벽 설정
 
 - vi 애디터로 파일을 열고 #부분 내용 추가(추가할때는 # 제거)
 
@@ -163,9 +171,9 @@ $ make install
   $ service iptables restart
   ```
 
-#### 1.1.2 MySQL 설치
+## 2. MySQL 설치
 
-##### 1.1.2.1 의존성 파일 설치
+### 2.1 의존성 파일 설치
 
 ```bash
 $ yum -y install ncurses-devel zlib curl libtermcap-devel lib-client-devel bzip2-devel cmake bison perl perl-devel
@@ -189,14 +197,14 @@ $ yum -y install ncurses-devel zlib curl libtermcap-devel lib-client-devel bzip2
   $ make && make install
   ```
 
-##### 1.1.2.2 리눅스 계정 생성
+### 2.2 리눅스 계정 생성
 
 ```bash
 $ groupadd mysql
 $ useradd -g mysql mysql
 ```
 
-##### 1.1.2.3 MySQL 다운로드
+### 2.3 MySQL 다운로드
 
 ```bash
 $ cd /usr/local/src
@@ -210,7 +218,7 @@ $ rm -rf mysql-5.5.14.tar.gz
 $ cd mysql-5.5.14
 ```
 
-##### 1.1.2.4 MySQL cmake 컴파일
+### 2.4 MySQL cmake 컴파일
 
 ```bash
 $ cmake \
@@ -231,7 +239,7 @@ $ cmake \
 $ make -j 2 && make install
 ```
 
-##### 1.1.2.5 환경설정 기본 파일 복사 및 수정
+### 2.5 환경설정 기본 파일 복사 및 수정
 
 ```bash
 $ cd /usr/local/mysql/support-files
@@ -252,7 +260,7 @@ $ cp my-huge.cnf /etc/my.cnf
   character-set-client-handshake = false
   ```
 
-##### 1.1.2.6 서비스 스크립트 및 서비스 등록
+### 2.6 서비스 스크립트 및 서비스 등록
 
 ```bash
 $ cp mysql.server /etc/rc.d/init.d/mysqld
@@ -269,7 +277,7 @@ $ cp mysql.server /etc/rc.d/init.d/mysqld
   datadir=/usr/local/mysql/data
   ```
 
-##### 1.1.2.7 MySQL 초기화
+### 2.7 MySQL 초기화
 
 ```bash
 $ cd /usr/local/mysql
@@ -277,7 +285,7 @@ $ cd /usr/local/mysql
 $ ./scripts/mysql_install_db --user=mysql --basedir=/usr/local/mysql --datadir=/usr/local/mysql/data --defaults-file=/etc/my.cnf
 ```
 
-##### 1.1.2.8 MySQL 그룹/계정 권한 주기
+### 2.8 MySQL 그룹/계정 권한 주기
 
 ```bash
 $ chown -R mysql:mysql /usr/local/mysql
@@ -287,7 +295,7 @@ $ chown -R mysql:mysql /usr/local/mysql/data
 $ chmod 755 /etc/rc.d/init.d/mysqld
 ```
 
-##### 1.1.2.9 MySQL 구동 시작
+### 2.9 MySQL 구동 시작
 
 ```bash
 $ service mysqld start
@@ -295,13 +303,13 @@ $ service mysqld start
 $ service mysqld stop
 ```
 
-##### 1.1.2.10 부팅 시 자동 실행하기 설정
+### 2.10 부팅 시 자동 실행하기 설정
 
 ```bash
 $ chkconfig --add mysqld
 ```
 
-##### 1.1.2.11 주요 기능 PATH 등록
+### 2.11 주요 기능 PATH 등록
 
 ```bash
 $ ln -s /usr/local/mysql/bin/mysql /usr/bin/mysql
@@ -329,7 +337,7 @@ $ ln -s /usr/local/mysql/support-files/mysql.server /etc/rc.d/init.d/mysql
   $ source /root/.bash_profile
   ```
 
-##### 1.1.2.12 MySQL root 계정 비밀번호 변경
+### 2.12 MySQL root 계정 비밀번호 변경
 
 ```bash
 $ service mysqld start
@@ -337,7 +345,7 @@ $ service mysqld start
 $ mysqladmin -u root password root
 ```
 
-##### 1.1.2.13 리눅스 시작시 MySQL 구동되도록 설정
+### 2.13 리눅스 시작시 MySQL 구동되도록 설정
 
 ```bash
 $ chkconfig --add mysqld
@@ -347,9 +355,9 @@ $ chkconfig mysqld on
 $ chkconfig --list mysqld
 ```
 
-#### 1.1.3 PHP 설치
+## 3. PHP 설치
 
-##### 1.1.3.1 설치에 필요한 패키지 
+### 3.1 설치에 필요한 패키지 
 
 ```bash
 $ yum -y install libxml2-devel
@@ -409,7 +417,7 @@ $ yum install gmp-devel
   $ export PKG_CONFIG_PATH=/usr/local/src/sqlite/lib/pkgconfig
   ```
 
-##### 1.1.3.2 PHP 다운로드 및 설치
+### 3.2 PHP 다운로드 및 설치
 
 ```bash
 $ cd /usr/local/src
@@ -456,7 +464,7 @@ $ php -version # 버전 확인
   ```
 
 
-#### 1.1.4 Apache와 PHP 연동
+### 3.3 Apache와 PHP 연동
 
 - vi 애디터 열고 확인 및 추가
 
@@ -472,7 +480,7 @@ $ php -version # 버전 확인
   AddType application/x-httpd-php .php .html
   ```
 
-#### 1.1.5 PHP 설정 및 테스트
+### 3.4 PHP 설정 및 테스트
 
 - vi 애디터 열고 수정
 
@@ -516,10 +524,12 @@ $ php -version # 버전 확인
   
   $ /usr/local/apache/bin/apachectl start
   ```
+  
+  ![image-20200310103250693](05_APM_NPM_Compile(CentOS).assets/image-20200310103250693.png)
 
-### 1.2 source를 이용한 NGINX 설치
+## 5. NGINX 설치
 
-#### 1.2.1 NGINX 다운로드
+### 5.1 NGINX 다운로드
 
 ```bash
 $ cd /usr/local/src
@@ -531,7 +541,7 @@ $ tar xvfz nginx-1.12.0.tar.gz
 $ rm nginx-1.12.0.tar.gz
 ```
 
-#### 1.2.2 PCRE 다운로드
+### 5.2 PCRE 다운로드
 
 ```bash
 $ cd /usr/local/src/nginx-1.12.0
@@ -541,7 +551,7 @@ $ wget http://downloads.sourceforge.net/project/pcre/pcre/8.37/pcre-8.37.tar.gz
 $ tar xvfz pcre-8.37.tar.gz
 ```
 
-#### 1.2.3 zlib 다운로드
+### 5.3 zlib 다운로드
 
 ```bash
 $ cd /usr/local/src/nginx-1.12.0
@@ -551,7 +561,7 @@ $ wget http://zlib.net/zlib-1.2.11.tar.gz
 $ tar xvfz zlib-1.2.11.tar.gz
 ```
 
-#### 1.2.4 OpenSSL 다운로드
+### 5.4 OpenSSL 다운로드
 
 ```bash
 $ cd /usr/local/src/nginx-1.12.0
@@ -561,7 +571,7 @@ $ wget http://www.openssl.org/source/openssl-1.0.2f.tar.gz
 $ tar xvfz openssl-1.0.2f.tar.gz
 ```
 
-#### 1.2.5 NGINX 설치
+### 5.5 NGINX 설치
 
 ```bash
 $ ./configure --prefix=/usr/local/src/nginx --with-zlib=./zlib-1.2.11 --with-pcre=./pcre-8.37 --with-openssl=./openssl-1.0.2f --with-http_ssl_module --with-http_stub_status_module
@@ -573,7 +583,7 @@ $ cd /usr/local/src
 $ rm -rf nginx-1.12.0
 ```
 
-#### 1.2.6 실행권한 설정
+### 5.6 실행권한 설정
 
 ```bash
 $ cd /usr/local/src/nginx/sbin
@@ -583,7 +593,7 @@ $ sudo chown root nginx
 $ sudo chmod +s nginx
 ```
 
-#### 1.2.7 실행 및 테스트
+### 5.7 실행 및 테스트
 
 ```bash
 $ cd /usr/local/src/nginx/sbin
@@ -606,7 +616,7 @@ $ ./nginx -s stop	# 종료
   # -A INPUT -m state --state NEW -m tcp -p tcp --dport 9090 -j ACCEPT
   ```
 
-#### 1.2.8 nginx 서비스 등록
+### 5.8 nginx 서비스 등록
 
 - vi 애디터 실행 후 아래 내용 작성
 
@@ -763,7 +773,7 @@ $ ./nginx -s stop	# 종료
   $ service nginx (start|stop|restart)
   ```
 
-#### 1.2.9 NGINX와 PHP 연동
+### 5.9 NGINX와 PHP 연동
 
 - php-fpm
 
@@ -829,6 +839,6 @@ $ ./nginx -s stop	# 종료
   $ /etc/init.d/php-fpm start
   ```
 
-  
+  ![image-20200310103343433](05_APM_NPM_Compile(CentOS).assets/image-20200310103343433.png)
 
 

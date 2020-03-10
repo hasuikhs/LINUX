@@ -195,6 +195,8 @@ dns-nameservers 8.8.8.8 8.8.8.4
   ```bash
   $ sudo apt update
   
+  $ sudo dpkg --configure -a
+  
   $ sudo apt upgrade
   
   $ sudo apt-get install ssh
