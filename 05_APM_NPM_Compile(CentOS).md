@@ -439,7 +439,6 @@ $ ./configure \
 	--with-imap-ssl \
 	--disable-debug \
 	--with-iconv \
-	--with-openssl \
 	--enable-fpm
 	
 $ make
@@ -527,9 +526,9 @@ $ php -version # 버전 확인
   
   ![image-20200310103250693](05_APM_NPM_Compile(CentOS).assets/image-20200310103250693.png)
 
-## 5. NGINX 설치
+## 4. NGINX 설치
 
-### 5.1 NGINX 다운로드
+### 4.1 NGINX 다운로드
 
 ```bash
 $ cd /usr/local/src
@@ -538,10 +537,10 @@ $ wget https://nginx.org/download/nginx-1.12.0.tar.gz
 
 $ tar xvfz nginx-1.12.0.tar.gz
 
-$ rm nginx-1.12.0.tar.gz
+$ rm -rf nginx-1.12.0.tar.gz
 ```
 
-### 5.2 PCRE 다운로드
+### 4.2 PCRE 다운로드
 
 ```bash
 $ cd /usr/local/src/nginx-1.12.0
@@ -551,7 +550,7 @@ $ wget http://downloads.sourceforge.net/project/pcre/pcre/8.37/pcre-8.37.tar.gz
 $ tar xvfz pcre-8.37.tar.gz
 ```
 
-### 5.3 zlib 다운로드
+### 4.3 zlib 다운로드
 
 ```bash
 $ cd /usr/local/src/nginx-1.12.0
@@ -561,7 +560,7 @@ $ wget http://zlib.net/zlib-1.2.11.tar.gz
 $ tar xvfz zlib-1.2.11.tar.gz
 ```
 
-### 5.4 OpenSSL 다운로드
+### 4.4 OpenSSL 다운로드
 
 ```bash
 $ cd /usr/local/src/nginx-1.12.0
@@ -571,10 +570,16 @@ $ wget http://www.openssl.org/source/openssl-1.0.2f.tar.gz
 $ tar xvfz openssl-1.0.2f.tar.gz
 ```
 
-### 5.5 NGINX 설치
+### 4.5 NGINX 설치
 
 ```bash
-$ ./configure --prefix=/usr/local/src/nginx --with-zlib=./zlib-1.2.11 --with-pcre=./pcre-8.37 --with-openssl=./openssl-1.0.2f --with-http_ssl_module --with-http_stub_status_module
+$ ./configure \
+	--prefix=/usr/local/src/nginx \
+	--with-zlib=./zlib-1.2.11 \
+	--with-pcre=./pcre-8.37 \
+	--with-openssl=./openssl-1.0.2f \
+	--with-http_ssl_module \
+	--with-http_stub_status_module
 
 $ make && make install
 
@@ -583,7 +588,7 @@ $ cd /usr/local/src
 $ rm -rf nginx-1.12.0
 ```
 
-### 5.6 실행권한 설정
+### 4.6 실행권한 설정
 
 ```bash
 $ cd /usr/local/src/nginx/sbin
@@ -593,7 +598,7 @@ $ sudo chown root nginx
 $ sudo chmod +s nginx
 ```
 
-### 5.7 실행 및 테스트
+### 4.7 실행 및 테스트
 
 ```bash
 $ cd /usr/local/src/nginx/sbin
@@ -616,7 +621,7 @@ $ ./nginx -s stop	# 종료
   # -A INPUT -m state --state NEW -m tcp -p tcp --dport 9090 -j ACCEPT
   ```
 
-### 5.8 nginx 서비스 등록
+### 4.8 nginx 서비스 등록
 
 - vi 애디터 실행 후 아래 내용 작성
 
@@ -773,7 +778,7 @@ $ ./nginx -s stop	# 종료
   $ service nginx (start|stop|restart)
   ```
 
-### 5.9 NGINX와 PHP 연동
+### 4.9 NGINX와 PHP 연동
 
 - php-fpm
 
@@ -788,7 +793,7 @@ $ ./nginx -s stop	# 종료
 - chkconfig 설정
 
   ```bash
-  $ cp /usr/local/src/php-7.4.3/sapi/fpm/init.d.php-fpm /etc/init.d/php-frpm
+  $ cp /usr/local/src/php-7.4.3/sapi/fpm/init.d/php-fpm /etc/init.d/php-fpm
   
   $ chmod 700 /etc/init.d/php-fpm
   
@@ -806,7 +811,7 @@ $ ./nginx -s stop	# 종료
     ```bash
     location / {
     	root html;
-    	index.html index.htm index.php;
+    	index index.html index.htm index.php;
     }
     
     location ~ \.php$ {
