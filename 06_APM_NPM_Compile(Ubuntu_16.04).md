@@ -107,6 +107,8 @@ $ sudo make install
   $ sudo vi /usr/local/apache2/conf/httpd.conf
   ```
 
+  - `ServerName localhost` 수정 및 주석 해제
+
   - `<IfModule dir_module>` 찾아서 추가
 
     ```bash
@@ -234,4 +236,237 @@ $ sudo ./bin/mysqld_safe &
 $ sudo ./bin/mysqladmin -u root password root
 ```
 
-http://forum.falinux.com/zbxe/index.php?document_srl=627832&mid=lecture_tip
+## 3. PHP 설치
+
+### 3.1 사전 설정
+
+```bash
+$ sudo apt-get install -y pkg-config sqlite3 libsqlite3-dev
+```
+
+### 3.2 PHP 다운로드 및 설치
+
+```bash
+$ wget https://www.php.net/distributions/php-7.4.3.tar.gz
+
+$ tar xvfz php-7.4.3.tar.gz
+
+$ rm -rf php-7.4.3.tar.gz
+
+$ cd php-7.4.3
+
+$ ./configure \
+	--prefix=/usr/local/php \
+	--with-apxs2=/usr/local/apache2/bin/apxs \
+	--enable-mysqlnd \
+	--with-mysqli=/usr/local/mysql/bin/mysql_config \
+	--with-pdo-mysql=/usr/local/mysql \
+	--with-config-file-path=/usr/local/apache2/conf \
+	--enable-exif \
+	--with-openssl \
+	--with-imap-ssl \
+	--disable-debug \
+	--with-iconv \
+	--enable-fpm
+	
+$ make
+
+$ make test
+
+$ sudo make install
+```
+
+### 3.3 Apache와 PHP 연동
+
+```bash
+$ sudo cp php.ini-production /usr/local/apache2/conf/php.ini
+```
+
+```bash
+$ sudo vi /usr/local/apache2/htdocs/index.php
+```
+
+```php
+<?php
+    phpinfo();
+?>
+```
+
+![image-20200311105113062](06_APM_NPM_Compile(Ubuntu_16.04).assets/image-20200311105113062.png)
+
+## 4. NGINX 설치
+
+### 4.1 NGINX 다운로드
+
+```bash
+$ wget https://nginx.org/download/nginx-1.12.0.tar.gz
+
+$ tar xvfz nginx-1.12.0.tar.gz
+
+$ rm -rf nginx-1.12.0.tar.gz
+```
+
+### 4.2 PCRE 다운로드
+
+```bash
+$ cd nginx-1.12.0
+
+$ wget http://downloads.sourceforge.net/project/pcre/pcre/8.37/pcre-8.37.tar.gz
+
+$ tar xvfz pcre-8.37.tar.gz
+
+$ rm -rf pcre-8.37.tar.gz
+```
+
+### 4.3 zlib 다운로드
+
+```bash
+$ wget http://zlib.net/zlib-1.2.11.tar.gz
+
+$ tar xvfz zlib-1.2.11.tar.gz
+
+$ rm -rf zlib-1.2.11.tar.gz
+```
+
+### 4.4 OpenSSL 다운로드
+
+```bash
+$ wget http://www.openssl.org/source/openssl-1.0.2f.tar.gz
+
+$ tar xvfz openssl-1.0.2f.tar.gz
+
+$ rm -rf openssl-1.0.2f.tar.gz
+```
+
+### 4.5 NGINX 설치
+
+```bash
+$ ./configure \
+	--prefix=/usr/local/nginx \
+	--with-zlib=./zlib-1.2.11 \
+	--with-pcre=./pcre-8.37 \
+	--with-openssl=./openssl-1.0.2f \
+	--with-http_ssl_module \
+	--with-http_stub_status_module
+	
+$ make
+
+$ sudo make install
+
+$ rm -rf ~/nginx-1.12.0
+```
+
+### 4.6 실행권한 설정
+
+```bash
+$ cd /usr/local/nginx/sbin
+
+$ sudo chown root nginx
+
+$ sudo chmod +s nginx
+```
+
+### 4.7 실행 및 테스트
+
+```bash
+$ cd /usr/local/nginx/sbin
+
+$ ./nginx	# 시작
+
+# 포트 오류시
+$ sudo vi /usr/local/nginx/conf/nginx.conf	# listen 80 수정
+
+$ ./nginx -s stop
+```
+
+### 4.8 NGINX와 PHP 연동
+
+- php-fpm
+
+  ```bash
+  $ sudo cp ~/php-7.4.3/php.ini-production /usr/local/lib/php.ini
+  
+  $ sudo cp /usr/local/php/etc/php-fpm.conf.default /usr/local/php/etc/php-fpm.conf
+  
+  $ sudo cp /usr/local/php/etc/php-fpm.d/www.conf.default /usr/local/php/etc/php-fpm.d/www.conf
+  ```
+
+- sysv-rc-conf 설정
+
+  ```bash
+  $ sudo cp ~/php-7.4.3/sapi/fpm/init.d.php-fpm /etc/init.d/php-fpm
+  
+  $ sudo chmod 700 /etc/init.d/php-fpm
+  
+  $ sudo apt-get install sysv-rc-conf	# ubuntu는 chkconfig가 없다
+  
+  $ sudo sysv-rc-conf php-fpm on
+  ```
+
+- vi 애디터 실행 후 아래 내용 수정
+
+  ```bash
+  $ sudo vi /usr/local/nginx/conf/nginx.conf
+  ```
+
+  - php 부분 주석 제거 후 수정
+
+    ```bash
+    location / {
+    	root html;
+    	index index.html index.htm index.php;
+    }
+    
+    location ~ \.php$ {
+    	root			/usr/local/src/nginx/html;
+    	fastcgi_pass	127.0.0.1:9000;
+    	fastcgi_index	index.php;
+    	fastcgi_param SCRIPT_FILENAME	/usr/local/src/nginx/html$fastcgi_script_name;
+    	# /scripts
+    	include			fastcgi_params;
+    }
+    ```
+
+- index.php 작성
+
+  ```bash
+  $ sudo vi /usr/local/nginx/html/index.php
+  ```
+
+  ```php
+  <?php
+      phpinfo();
+  ?>
+  ```
+
+- 유저 및 그룹 추가
+
+  ```bash
+  $ useradd nginx
+  
+  $ groupadd nginx
+  ```
+
+- www.conf 수정
+
+  ```bash
+  $ sudo vi /usr/loacl/php/etc/php-fpm.d/www.conf
+  ```
+
+  ```
+  user = nginx
+  group = nginx
+  ```
+
+- 재시작
+
+  ```bash
+  $ ./nginx -s stop
+  
+  $ ./nginx
+  
+  $ sudo /etc/init.d/php-fpm start
+  ```
+
+  ![image-20200311134602299](06_APM_NPM_Compile(Ubuntu_16.04).assets/image-20200311134602299.png)
+
