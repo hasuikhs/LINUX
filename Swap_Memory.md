@@ -39,4 +39,10 @@
   # /swapfile	none	swap	sw	0	0 추가
   ```
 
+- 스왑 메모리 초기화 및 재시작
+
+  ```bash
+  $ swapoff -a && swapon -a
+  ```
+
   
