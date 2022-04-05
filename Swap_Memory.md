@@ -45,4 +45,33 @@
   $ swapoff -a && swapon -a
   ```
 
+- 스왑 메모리 사용 빈도
+
+  - 사용 빈도 확인
+
+    ```bash
+    $ cat /proc/sys/vm/swappiness
+    ```
+
+    - 사용 빈도는 0 ~ 100 사이에서 조정 100이 최대이며 적극적으로 사용하겠다는 뜻
+
+  - 사용 빈도 조정
+
+    ```bash
+    $ vi /etc/sysctl.conf
+    ```
+
+    ```bash
+    # 아래 구문 추가
+    vm.swappiness = <빈도>
+    ```
+
+  - 적용
+
+    ```bash
+    $ echo 0 > /proc/sys/vm/swappiness
+    ```
+
+    
+
   
