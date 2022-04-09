@@ -42,8 +42,10 @@
 - 스왑 메모리 초기화 및 재시작
 
   ```bash
-  $ swapoff -a && swapon -a
+  $ sudo swapoff -a && sudo swapon -a
   ```
+
+  - 스왑 메모리 반납에 시간이 오래 걸릴수도 있으니 따로 해도 됨
 
 - 스왑 메모리 사용 빈도
 
