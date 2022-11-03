@@ -14,6 +14,12 @@
 
   ```bash
   $ fallocate -l 4GB /swapfile
+
+  or 
+
+  $ dd if=/dev/zero of=/swapfile count=4096 bs=1M
+  # 위 명령어는 count와 bs의 값으로 크기를 계산하여 swapfile 생성
+  # 입력한 크기가 클수록 시간이 오래 걸림
   ```
 
   - 최상위 디렉토리에 원하는 용량만큼 생성 가능
